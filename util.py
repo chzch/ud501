@@ -11,6 +11,9 @@ from dateutil.parser import parse
 # Recieve data
 ################################################################################
 
+DATA_FOLDER = "data"
+
+
 def download_data(symbol, start, end):
 	"""Returns an request object containing the data for the specified symbol"""
 	s = parse(start)
@@ -24,6 +27,7 @@ def download_data(symbol, start, end):
 
 
 def get_csv(symbols, start='1997-01-01', end='2016-09-01'):
+	"""Save the stock data for the given list on symbols""" 
 	for symbol in symbols:
 		if not symbol_is_file(symbol): 
 			request = download_data(symbol, start, end)
@@ -32,11 +36,11 @@ def get_csv(symbols, start='1997-01-01', end='2016-09-01'):
 			f.write(request.text)
 			f.close()
 
-def symbol_is_file(symbol, base_dir="data"):
+def symbol_is_file(symbol, base_dir=DATA_FOLDER):
 	"""Return True if CSV file exists or False if not"""
 	return os.path.isfile(base_dir + "/{}.csv".format(str(symbol)))
 
-def symbol_to_path(symbol, base_dir="data"):
+def symbol_to_path(symbol, base_dir=DATA_FOLDER):
 	"""Return CSV file path given ticker symbol."""
 	return os.path.join(base_dir, "{}.csv".format(str(symbol)))
 
@@ -68,31 +72,28 @@ def plot_data(df, title="Stock prices", xlabel="Date", ylabel="Price"):
 	plt.show()
 
 
+################################################################################
+# Data Manipulation
+################################################################################
+
 def fill_missing_values(df):
     """Fill missing values in data frame, in place."""
     df.fillna(method='ffill', inplace=True)
     df.fillna(method='bfill', inplace=True)
 
-
-################################################################################
-# Data Manipulation
-################################################################################
-
 def get_daily_returns(df):
 	"""Compute and return the daily return values."""
 	daily_returns = df.copy()
 	daily_returns[1:] = (df[1:] / df[:-1].values) - 1
-	daily_returns.ix[0, :] = 0 # set daily returns for row 0 to 0
+	daily_returns.iloc[0] = 0 # set daily returns for row 0 to 0
 	return daily_returns
 
 def get_rolling_mean(values, window=20):
 	"""Return rolling mean of given values, using specified window size."""
-	#return pd.rolling_mean(values, window=window)
 	return values.rolling(window, center=False).mean()
 
 def get_rolling_std(values, window=20):
 	"""Return rolling standard deviation of given values, using specified window size"""
-	#return pd.rolling_std(values, window=window) 
 	return values.rolling(window, center=False).std()
 
 def get_bollinger_bands(rm, rstd):
